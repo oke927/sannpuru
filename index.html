@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>超釣りゲーム</title>
+<title>イラストタップRPG</title>
 
 <style>
 
@@ -10,48 +10,53 @@ body{
 font-family:sans-serif;
 text-align:center;
 margin:0;
-background:linear-gradient(#6ec6ff,#1976d2);
+background:linear-gradient(#111,#000);
 color:white;
 }
 
-#ocean{
-position:relative;
-height:350px;
-overflow:hidden;
-background:linear-gradient(#4fc3f7,#01579b);
+h1{
+margin-top:10px;
 }
 
-.fish{
-position:absolute;
-font-size:40px;
+#enemy{
+width:150px;
 cursor:pointer;
-animation:swim linear forwards;
+transition:transform 0.1s;
 }
 
-@keyframes swim{
-0%{left:-50px}
-100%{left:110%}
+#enemy:active{
+transform:scale(0.9);
+}
+
+#effect{
+font-size:35px;
+color:yellow;
+height:40px;
+}
+
+#hpbar{
+width:80%;
+height:20px;
+background:#444;
+margin:10px auto;
+border-radius:10px;
+overflow:hidden;
+}
+
+#hp{
+height:100%;
+width:100%;
+background:red;
 }
 
 button{
-font-size:16px;
-padding:8px 20px;
-margin:5px;
+font-size:14px;
+padding:8px 16px;
+margin:4px;
 border:none;
 border-radius:10px;
 background:orange;
 color:white;
-}
-
-#dex{
-display:none;
-background:white;
-color:black;
-margin:10px;
-padding:10px;
-border-radius:10px;
-max-height:250px;
-overflow:auto;
 }
 
 </style>
@@ -59,162 +64,162 @@ overflow:auto;
 
 <body>
 
-<h1>🎣超釣りゲーム</h1>
+<h1>⚔️イラストタップRPG</h1>
 
-<div id="ocean"></div>
+<div id="stage"></div>
 
-<div id="result">魚をタップして釣ろう！</div>
-<div id="score"></div>
-<div id="rod"></div>
+<img id="enemy" src="https://i.imgur.com/8QfQZ6F.png">
 
-<button onclick="upgradeRod()">釣り竿強化</button>
-<button onclick="toggleDex()">図鑑</button>
+<div id="effect"></div>
 
-<div id="dex">
-<h3>📖魚図鑑</h3>
-<div id="dexList"></div>
+<div id="hpbar">
+<div id="hp"></div>
 </div>
+
+<div id="enemyhp"></div>
+
+<div id="coins"></div>
+<div id="weapon"></div>
+<div id="ally"></div>
+
+<button onclick="upgradeWeapon()">武器強化</button>
+<button onclick="hireAlly()">仲間</button>
+<button onclick="skill()">必殺技</button>
 
 <script>
 
-let score = Number(localStorage.getItem("score")) || 0
-let rod = Number(localStorage.getItem("rod")) || 1
-let caught = JSON.parse(localStorage.getItem("caught")) || {}
+let coins = 0
+let weapon = 1
+let ally = 0
+let stage = 1
 
-const fishes = [
+let hp
+let maxHP
 
-{name:"小魚",emoji:"🐟",point:1,rarity:1},
-{name:"イワシ",emoji:"🐟",point:1,rarity:1},
-{name:"サバ",emoji:"🐟",point:2,rarity:1},
-
-{name:"タイ",emoji:"🐠",point:3,rarity:2},
-{name:"フグ",emoji:"🐡",point:4,rarity:2},
-{name:"イカ",emoji:"🦑",point:4,rarity:2},
-
-{name:"タコ",emoji:"🐙",point:5,rarity:3},
-{name:"エビ",emoji:"🦐",point:5,rarity:3},
-{name:"カニ",emoji:"🦀",point:6,rarity:3},
-
-{name:"クラゲ",emoji:"🪼",point:6,rarity:4},
-{name:"カメ",emoji:"🐢",point:8,rarity:4},
-{name:"イルカ",emoji:"🐬",point:10,rarity:4},
-
-{name:"クジラ",emoji:"🐋",point:15,rarity:5},
-{name:"サメ",emoji:"🦈",point:20,rarity:5},
-{name:"伝説の魚",emoji:"🐉",point:50,rarity:5}
-
+const enemies=[
+{img:"https://i.imgur.com/8QfQZ6F.png",hp:40},
+{img:"https://i.imgur.com/BK8QK6F.png",hp:50},
+{img:"https://i.imgur.com/0Z8FQ9T.png",hp:60}
 ]
 
-updateUI()
-updateDex()
-
-function spawnFish(){
-
-let ocean=document.getElementById("ocean")
-
-let available=fishes.filter(f=>f.rarity<=rod+1)
-
-let fishData=available[Math.floor(Math.random()*available.length)]
-
-let fish=document.createElement("div")
-fish.className="fish"
-fish.innerText=fishData.emoji
-
-fish.style.top=Math.random()*300+"px"
-fish.style.animationDuration=(4+Math.random()*4)+"s"
-
-fish.onclick=function(){
-
-score+=fishData.point
-
-document.getElementById("result").innerText=
-fishData.name+" を釣った！ "+ "★".repeat(fishData.rarity)
-
-caught[fishData.name]=true
-
-save()
-updateUI()
-updateDex()
-
-fish.remove()
-
-}
-
-ocean.appendChild(fish)
-
-setTimeout(()=>fish.remove(),8000)
-
-}
-
-setInterval(spawnFish,1200)
-
-function upgradeRod(){
-
-let cost=rod*50
-
-if(score>=cost){
-
-score-=cost
-rod++
-
-alert("釣り竿Lv"+rod+"になった！")
-
-save()
+spawnEnemy()
 updateUI()
 
-}else{
+document.getElementById("enemy").onclick=function(){
+attack(weapon)
+}
 
-alert("ポイント不足")
+function attack(power){
+
+hp -= power
+
+document.getElementById("effect").innerText="💥-"+power
+
+setTimeout(()=>{
+document.getElementById("effect").innerText=""
+},300)
+
+if(hp<=0){
+
+coins += 10
+
+stage++
+
+spawnEnemy()
 
 }
 
+updateHP()
+
 }
 
-function toggleDex(){
+function spawnEnemy(){
 
-let d=document.getElementById("dex")
+let enemy=enemies[Math.floor(Math.random()*enemies.length)]
 
-d.style.display = d.style.display=="none" ? "block":"none"
+maxHP=enemy.hp+stage*5
+hp=maxHP
+
+document.getElementById("enemy").src=enemy.img
+
+updateHP()
+
+}
+
+function updateHP(){
+
+document.getElementById("enemyhp").innerText="HP:"+hp
+
+let percent=(hp/maxHP)*100
+
+document.getElementById("hp").style.width=percent+"%"
+
+updateUI()
 
 }
 
 function updateUI(){
 
-document.getElementById("score").innerText="ポイント:"+score
-document.getElementById("rod").innerText="釣り竿Lv:"+rod
+document.getElementById("coins").innerText="コイン:"+coins
+document.getElementById("weapon").innerText="武器Lv:"+weapon
+document.getElementById("ally").innerText="仲間:"+ally
+document.getElementById("stage").innerText="ステージ:"+stage
 
 }
 
-function updateDex(){
+function upgradeWeapon(){
 
-let list=document.getElementById("dexList")
-list.innerHTML=""
+let cost=weapon*30
 
-fishes.forEach(f=>{
+if(coins>=cost){
 
-let div=document.createElement("div")
+coins-=cost
+weapon++
 
-if(caught[f.name]){
-div.innerText=f.emoji+" "+f.name+" "+"★".repeat(f.rarity)
 }else{
-div.innerText="？？？"
-}
 
-list.appendChild(div)
-
-})
+alert("コイン不足")
 
 }
 
-function save(){
-
-localStorage.setItem("score",score)
-localStorage.setItem("rod",rod)
-localStorage.setItem("caught",JSON.stringify(caught))
+updateUI()
 
 }
+
+function hireAlly(){
+
+if(coins>=100){
+
+coins-=100
+ally++
+
+}else{
+
+alert("コイン不足")
+
+}
+
+updateUI()
+
+}
+
+function skill(){
+
+attack(weapon*8)
+
+}
+
+setInterval(()=>{
+
+if(ally>0){
+
+attack(ally)
+
+}
+
+},1000)
 
 </script>
 
 </body>
-</html>
+  </html>
