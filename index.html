@@ -20,15 +20,21 @@ body{
   background:rgba(0,0,0,0.6);
   padding:30px;
   border-radius:20px;
-  width:360px;
+  width:420px;
   box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
 
 h1{margin-top:0}
 
+.buttons{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+
 button{
-  font-size:18px;
-  padding:12px 24px;
+  font-size:16px;
+  padding:10px 18px;
   border:none;
   border-radius:12px;
   background:linear-gradient(45deg,#ff9800,#ff5722);
@@ -41,29 +47,30 @@ button:hover{transform:scale(1.05)}
 
 #result{
   margin-top:20px;
-  min-height:160px;
+  min-height:200px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
 }
 
 .card{
-  margin-top:10px;
-  padding:20px;
-  border-radius:14px;
-  font-size:20px;
+  padding:10px;
+  border-radius:12px;
+  font-size:14px;
   font-weight:bold;
-  animation:pop .5s ease;
+  animation:pop .4s ease;
 }
 
 .card img{
-  width:120px;
-  height:120px;
+  width:100%;
+  height:90px;
   object-fit:cover;
-  border-radius:10px;
-  margin-bottom:10px;
+  border-radius:8px;
 }
 
 @keyframes pop{
   0%{transform:scale(0);opacity:0}
-  70%{transform:scale(1.2)}
+  70%{transform:scale(1.15)}
   100%{transform:scale(1);opacity:1}
 }
 
@@ -76,8 +83,8 @@ button:hover{transform:scale(1.05)}
 }
 
 @keyframes ssrGlow{
-  from{box-shadow:0 0 10px gold}
-  to{box-shadow:0 0 30px gold}
+  from{box-shadow:0 0 8px gold}
+  to{box-shadow:0 0 20px gold}
 }
 
 #gachaBall{
@@ -122,89 +129,73 @@ button:hover{transform:scale(1.05)}
 
 <div id="game">
 <h1>ガチャゲーム</h1>
-<button onclick="drawGacha()">ガチャを引く</button>
+
+<div class="buttons">
+<button onclick="drawGacha(1)">1回ガチャ</button>
+<button onclick="drawGacha(10)">10連ガチャ</button>
+</div>
+
 <div id="gachaBall"></div>
 <div id="result"></div>
 </div>
 
 <script>
 const characters = [
-  {
-    name:"スライム",
-    rarity:"N",
-    rate:60,
-    img:"https://picsum.photos/seed/slime/200"
-  },
-  {
-    name:"ゴブリン",
-    rarity:"N",
-    rate:60,
-    img:"https://picsum.photos/seed/goblin/200"
-  },
-  {
-    name:"ナイト",
-    rarity:"R",
-    rate:25,
-    img:"https://picsum.photos/seed/knight/200"
-  },
-  {
-    name:"ウィザード",
-    rarity:"R",
-    rate:25,
-    img:"https://picsum.photos/seed/wizard/200"
-  },
-  {
-    name:"ドラゴン",
-    rarity:"SR",
-    rate:10,
-    img:"https://picsum.photos/seed/dragon/200"
-  },
-  {
-    name:"フェニックス",
-    rarity:"SSR",
-    rate:3,
-    img:"https://picsum.photos/seed/phoenix/200"
-  }
+{name:"スライム",rarity:"N",rate:60,img:"https://picsum.photos/seed/slime/200"},
+{name:"ゴブリン",rarity:"N",rate:60,img:"https://picsum.photos/seed/goblin/200"},
+{name:"ナイト",rarity:"R",rate:25,img:"https://picsum.photos/seed/knight/200"},
+{name:"ウィザード",rarity:"R",rate:25,img:"https://picsum.photos/seed/wizard/200"},
+{name:"ドラゴン",rarity:"SR",rate:10,img:"https://picsum.photos/seed/dragon/200"},
+{name:"フェニックス",rarity:"SSR",rate:3,img:"https://picsum.photos/seed/phoenix/200"}
 ];
 
-function drawGacha(){
-  const resultDiv = document.getElementById("result");
-  const ball = document.getElementById("gachaBall");
+function pickCharacter(){
+ const total = characters.reduce((s,c)=>s+c.rate,0);
+ let rand = Math.random()*total;
 
-  resultDiv.innerHTML="";
-  ball.style.display="block";
+ for(const c of characters){
+   if(rand < c.rate) return c;
+   rand -= c.rate;
+ }
+ return characters[0];
+}
 
-  setTimeout(()=>{
+function drawGacha(count){
+ const resultDiv=document.getElementById("result");
+ const ball=document.getElementById("gachaBall");
 
-    const total = characters.reduce((s,c)=>s+c.rate,0);
-    let rand = Math.random()*total;
+ resultDiv.innerHTML="";
+ ball.style.display="block";
 
-    let chosen = characters[0];
+ setTimeout(()=>{
 
-    for(const c of characters){
-      if(rand < c.rate){
-        chosen = c;
-        break;
-      }
-      rand -= c.rate;
-    }
+ ball.style.display="none";
 
-    ball.style.display="none";
+ let ssrHit=false;
 
-    if(chosen.rarity === "SSR"){
-      document.body.classList.add("flash");
-      setTimeout(()=>document.body.classList.remove("flash"),1200);
-    }
+ for(let i=0;i<count;i++){
+   const chosen=pickCharacter();
 
-    resultDiv.innerHTML = `
-      <div class="card ${chosen.rarity}">
-        <img src="${chosen.img}">
-        <div>${chosen.rarity}</div>
-        <div>${chosen.name}</div>
-      </div>
-    `;
+   if(chosen.rarity==="SSR") ssrHit=true;
 
-  },1500);
+   const card=document.createElement("div");
+   card.className="card "+chosen.rarity;
+
+   card.innerHTML=`
+     <img src="${chosen.img}">
+     <div>${chosen.rarity}</div>
+     <div>${chosen.name}</div>
+   `;
+
+   resultDiv.appendChild(card);
+ }
+
+ if(ssrHit){
+   document.body.classList.add("flash");
+   setTimeout(()=>document.body.classList.remove("flash"),1200);
+ }
+
+ },1500);
 }
 </script>
 
