@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>シンプルガチャゲーム</title>
+<style>
+body{
+  font-family: Arial, sans-serif;
+  text-align:center;
+  background:linear-gradient(180deg,#4facfe,#00f2fe);
+  height:100vh;
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#game{
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  width:320px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+h1{
+  margin-top:0;
+}
+
+button{
+  font-size:18px;
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  background:#ff9800;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#f57c00;
+}
+
+#result{
+  margin-top:20px;
+  font-size:20px;
+  min-height:40px;
+}
+
+.card{
+  margin-top:20px;
+  padding:20px;
+  border-radius:12px;
+  font-weight:bold;
+}
+
+.N{background:#e0e0e0}
+.R{background:#90caf9}
+.SR{background:#ce93d8}
+.SSR{background:#ffd54f}
+</style>
+</head>
+<body>
+
+<div id="game">
+<h1>ガチャゲーム</h1>
+<button onclick="drawGacha()">ガチャを引く</button>
+<div id="result"></div>
+</div>
+
+<script>
+const characters = [
+  {name:"スライム", rarity:"N", rate:60},
+  {name:"ゴブリン", rarity:"N", rate:60},
+  {name:"ナイト", rarity:"R", rate:25},
+  {name:"ウィザード", rarity:"R", rate:25},
+  {name:"ドラゴン", rarity:"SR", rate:10},
+  {name:"フェニックス", rarity:"SSR", rate:3}
+];
+
+function drawGacha(){
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = "ガチャ中...";
+
+  setTimeout(()=>{
+    const total = characters.reduce((sum,c)=>sum+c.rate,0);
+    let rand = Math.random()*total;
+
+    let chosen = characters[0];
+
+    for(const c of characters){
+      if(rand < c.rate){
+        chosen = c;
+        break;
+      }
+      rand -= c.rate;
+    }
+
+    resultDiv.innerHTML = `<div class="card ${chosen.rarity}">${chosen.rarity} : ${chosen.name}</div>`;
+  },800);
+}
+</script>
+
+</body>
+</html>
