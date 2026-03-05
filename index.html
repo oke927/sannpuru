@@ -31,4 +31,145 @@ button{
   padding:12px 24px;
   border:none;
   border-radius:12px;
-  background:linear-gradient(45deg,#
+  background:linear-gradient(45deg,#ff9800,#ff5722);
+  color:white;
+  cursor:pointer;
+  transition:transform .2s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+#result{
+  margin-top:20px;
+  min-height:120px;
+}
+
+.card{
+  margin-top:10px;
+  padding:25px;
+  border-radius:14px;
+  font-size:22px;
+  font-weight:bold;
+  animation:pop .5s ease;
+}
+
+@keyframes pop{
+  0%{transform:scale(0);opacity:0}
+  70%{transform:scale(1.2)}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* レアリティ色 */
+.N{background:#9e9e9e}
+.R{background:#42a5f5}
+.SR{background:#ab47bc}
+.SSR{
+  background:linear-gradient(45deg,#ffd700,#ff9800);
+  animation:ssrGlow 1s infinite alternate;
+}
+
+@keyframes ssrGlow{
+  from{box-shadow:0 0 10px gold}
+  to{box-shadow:0 0 30px gold}
+}
+
+/* カプセル */
+#gachaBall{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:linear-gradient(red 50%,white 50%);
+  margin:20px auto;
+  position:relative;
+  display:none;
+  animation:shake .6s infinite;
+}
+
+#gachaBall:after{
+  content:"";
+  position:absolute;
+  width:20px;
+  height:20px;
+  background:white;
+  border-radius:50%;
+  top:30px;
+  left:30px;
+  border:3px solid #333;
+}
+
+@keyframes shake{
+  0%{transform:rotate(-10deg)}
+  50%{transform:rotate(10deg)}
+  100%{transform:rotate(-10deg)}
+}
+
+.flash{
+  animation:flash .4s 3;
+}
+
+@keyframes flash{
+  0%{background:white}
+  100%{background:transparent}
+}
+
+</style>
+</head>
+<body>
+
+<div id="game">
+<h1>ガチャゲーム</h1>
+<button onclick="drawGacha()">ガチャを引く</button>
+<div id="gachaBall"></div>
+<div id="result"></div>
+</div>
+
+<script>
+const characters = [
+  {name:"スライム", rarity:"N", rate:60},
+  {name:"ゴブリン", rarity:"N", rate:60},
+  {name:"ナイト", rarity:"R", rate:25},
+  {name:"ウィザード", rarity:"R", rate:25},
+  {name:"ドラゴン", rarity:"SR", rate:10},
+  {name:"フェニックス", rarity:"SSR", rate:3}
+];
+
+function drawGacha(){
+  const resultDiv = document.getElementById("result");
+  const ball = document.getElementById("gachaBall");
+
+  resultDiv.innerHTML="";
+  ball.style.display="block";
+
+  setTimeout(()=>{
+
+    const total = characters.reduce((s,c)=>s+c.rate,0);
+    let rand = Math.random()*total;
+
+    let chosen = characters[0];
+
+    for(const c of characters){
+      if(rand < c.rate){
+        chosen = c;
+        break;
+      }
+      rand -= c.rate;
+    }
+
+    ball.style.display="none";
+
+    if(chosen.rarity === "SSR"){
+      document.body.classList.add("flash");
+      setTimeout(()=>document.body.classList.remove("flash"),1200);
+    }
+
+    resultDiv.innerHTML = `<div class="card ${chosen.rarity}">${chosen.rarity}<br>${chosen.name}</div>`;
+
+  },1500);
+}
+</script>
+
+</body>
+</html>
+
