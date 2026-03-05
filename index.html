@@ -1,202 +1,219 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<title>ガチャゲーム</title>
+<meta charset="UTF-8">
+<title>超釣りゲーム</title>
+
 <style>
+
 body{
-  font-family: Arial, sans-serif;
-  text-align:center;
-  background:linear-gradient(180deg,#141e30,#243b55);
-  height:100vh;
-  margin:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  color:white;
+font-family:sans-serif;
+text-align:center;
+margin:0;
+background:linear-gradient(#6ec6ff,#1976d2);
+color:white;
 }
 
-#game{
-  background:rgba(0,0,0,0.6);
-  padding:30px;
-  border-radius:20px;
-  width:420px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+#ocean{
+position:relative;
+height:350px;
+overflow:hidden;
+background:linear-gradient(#4fc3f7,#01579b);
 }
 
-h1{margin-top:0}
+.fish{
+position:absolute;
+font-size:40px;
+cursor:pointer;
+animation:swim linear forwards;
+}
 
-.buttons{
-  display:flex;
-  gap:10px;
-  justify-content:center;
+@keyframes swim{
+0%{left:-50px}
+100%{left:110%}
 }
 
 button{
-  font-size:16px;
-  padding:10px 18px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(45deg,#ff9800,#ff5722);
-  color:white;
-  cursor:pointer;
-  transition:transform .2s;
+font-size:16px;
+padding:8px 20px;
+margin:5px;
+border:none;
+border-radius:10px;
+background:orange;
+color:white;
 }
 
-button:hover{transform:scale(1.05)}
-
-#result{
-  margin-top:20px;
-  min-height:200px;
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-}
-
-.card{
-  padding:10px;
-  border-radius:12px;
-  font-size:14px;
-  font-weight:bold;
-  animation:pop .4s ease;
-}
-
-.card img{
-  width:100%;
-  height:90px;
-  object-fit:cover;
-  border-radius:8px;
-}
-
-@keyframes pop{
-  0%{transform:scale(0);opacity:0}
-  70%{transform:scale(1.15)}
-  100%{transform:scale(1);opacity:1}
-}
-
-.N{background:#9e9e9e}
-.R{background:#42a5f5}
-.SR{background:#ab47bc}
-.SSR{
-  background:linear-gradient(45deg,#ffd700,#ff9800);
-  animation:ssrGlow 1s infinite alternate;
-}
-
-@keyframes ssrGlow{
-  from{box-shadow:0 0 8px gold}
-  to{box-shadow:0 0 20px gold}
-}
-
-#gachaBall{
-  width:80px;
-  height:80px;
-  border-radius:50%;
-  background:linear-gradient(red 50%,white 50%);
-  margin:20px auto;
-  position:relative;
-  display:none;
-  animation:shake .6s infinite;
-}
-
-#gachaBall:after{
-  content:"";
-  position:absolute;
-  width:20px;
-  height:20px;
-  background:white;
-  border-radius:50%;
-  top:30px;
-  left:30px;
-  border:3px solid #333;
-}
-
-@keyframes shake{
-  0%{transform:rotate(-10deg)}
-  50%{transform:rotate(10deg)}
-  100%{transform:rotate(-10deg)}
-}
-
-.flash{animation:flash .4s 3}
-
-@keyframes flash{
-  0%{background:white}
-  100%{background:transparent}
+#dex{
+display:none;
+background:white;
+color:black;
+margin:10px;
+padding:10px;
+border-radius:10px;
+max-height:250px;
+overflow:auto;
 }
 
 </style>
 </head>
+
 <body>
 
-<div id="game">
-<h1>ガチャゲーム</h1>
+<h1>🎣超釣りゲーム</h1>
 
-<div class="buttons">
-<button onclick="drawGacha(1)">1回ガチャ</button>
-<button onclick="drawGacha(10)">10連ガチャ</button>
-</div>
+<div id="ocean"></div>
 
-<div id="gachaBall"></div>
-<div id="result"></div>
+<div id="result">魚をタップして釣ろう！</div>
+<div id="score"></div>
+<div id="rod"></div>
+
+<button onclick="upgradeRod()">釣り竿強化</button>
+<button onclick="toggleDex()">図鑑</button>
+
+<div id="dex">
+<h3>📖魚図鑑</h3>
+<div id="dexList"></div>
 </div>
 
 <script>
-const characters = [
-{name:"スライム",rarity:"N",rate:60,img:"https://picsum.photos/seed/slime/200"},
-{name:"ゴブリン",rarity:"N",rate:60,img:"https://picsum.photos/seed/goblin/200"},
-{name:"ナイト",rarity:"R",rate:25,img:"https://picsum.photos/seed/knight/200"},
-{name:"ウィザード",rarity:"R",rate:25,img:"https://picsum.photos/seed/wizard/200"},
-{name:"ドラゴン",rarity:"SR",rate:10,img:"https://picsum.photos/seed/dragon/200"},
-{name:"フェニックス",rarity:"SSR",rate:3,img:"https://picsum.photos/seed/phoenix/200"}
-];
 
-function pickCharacter(){
- const total = characters.reduce((s,c)=>s+c.rate,0);
- let rand = Math.random()*total;
+let score = Number(localStorage.getItem("score")) || 0
+let rod = Number(localStorage.getItem("rod")) || 1
+let caught = JSON.parse(localStorage.getItem("caught")) || {}
 
- for(const c of characters){
-   if(rand < c.rate) return c;
-   rand -= c.rate;
- }
- return characters[0];
+const fishes = [
+
+{name:"小魚",emoji:"🐟",point:1,rarity:1},
+{name:"イワシ",emoji:"🐟",point:1,rarity:1},
+{name:"サバ",emoji:"🐟",point:2,rarity:1},
+
+{name:"タイ",emoji:"🐠",point:3,rarity:2},
+{name:"フグ",emoji:"🐡",point:4,rarity:2},
+{name:"イカ",emoji:"🦑",point:4,rarity:2},
+
+{name:"タコ",emoji:"🐙",point:5,rarity:3},
+{name:"エビ",emoji:"🦐",point:5,rarity:3},
+{name:"カニ",emoji:"🦀",point:6,rarity:3},
+
+{name:"クラゲ",emoji:"🪼",point:6,rarity:4},
+{name:"カメ",emoji:"🐢",point:8,rarity:4},
+{name:"イルカ",emoji:"🐬",point:10,rarity:4},
+
+{name:"クジラ",emoji:"🐋",point:15,rarity:5},
+{name:"サメ",emoji:"🦈",point:20,rarity:5},
+{name:"伝説の魚",emoji:"🐉",point:50,rarity:5}
+
+]
+
+updateUI()
+updateDex()
+
+function spawnFish(){
+
+let ocean=document.getElementById("ocean")
+
+let available=fishes.filter(f=>f.rarity<=rod+1)
+
+let fishData=available[Math.floor(Math.random()*available.length)]
+
+let fish=document.createElement("div")
+fish.className="fish"
+fish.innerText=fishData.emoji
+
+fish.style.top=Math.random()*300+"px"
+fish.style.animationDuration=(4+Math.random()*4)+"s"
+
+fish.onclick=function(){
+
+score+=fishData.point
+
+document.getElementById("result").innerText=
+fishData.name+" を釣った！ "+ "★".repeat(fishData.rarity)
+
+caught[fishData.name]=true
+
+save()
+updateUI()
+updateDex()
+
+fish.remove()
+
 }
 
-function drawGacha(count){
- const resultDiv=document.getElementById("result");
- const ball=document.getElementById("gachaBall");
+ocean.appendChild(fish)
 
- resultDiv.innerHTML="";
- ball.style.display="block";
+setTimeout(()=>fish.remove(),8000)
 
- setTimeout(()=>{
-
- ball.style.display="none";
-
- let ssrHit=false;
-
- for(let i=0;i<count;i++){
-   const chosen=pickCharacter();
-
-   if(chosen.rarity==="SSR") ssrHit=true;
-
-   const card=document.createElement("div");
-   card.className="card "+chosen.rarity;
-
-   card.innerHTML=`
-     <img src="${chosen.img}">
-     <div>${chosen.rarity}</div>
-     <div>${chosen.name}</div>
-   `;
-
-   resultDiv.appendChild(card);
- }
-
- if(ssrHit){
-   document.body.classList.add("flash");
-   setTimeout(()=>document.body.classList.remove("flash"),1200);
- }
-
- },1500);
 }
+
+setInterval(spawnFish,1200)
+
+function upgradeRod(){
+
+let cost=rod*50
+
+if(score>=cost){
+
+score-=cost
+rod++
+
+alert("釣り竿Lv"+rod+"になった！")
+
+save()
+updateUI()
+
+}else{
+
+alert("ポイント不足")
+
+}
+
+}
+
+function toggleDex(){
+
+let d=document.getElementById("dex")
+
+d.style.display = d.style.display=="none" ? "block":"none"
+
+}
+
+function updateUI(){
+
+document.getElementById("score").innerText="ポイント:"+score
+document.getElementById("rod").innerText="釣り竿Lv:"+rod
+
+}
+
+function updateDex(){
+
+let list=document.getElementById("dexList")
+list.innerHTML=""
+
+fishes.forEach(f=>{
+
+let div=document.createElement("div")
+
+if(caught[f.name]){
+div.innerText=f.emoji+" "+f.name+" "+"★".repeat(f.rarity)
+}else{
+div.innerText="？？？"
+}
+
+list.appendChild(div)
+
+})
+
+}
+
+function save(){
+
+localStorage.setItem("score",score)
+localStorage.setItem("rod",rod)
+localStorage.setItem("caught",JSON.stringify(caught))
+
+}
+
 </script>
 
 </body>
