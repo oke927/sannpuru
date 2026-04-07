@@ -2,224 +2,185 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>イラストタップRPG</title>
+<title>古文 助動詞カルタ（学習用）</title>
 
 <style>
-
 body{
 font-family:sans-serif;
 text-align:center;
+background:#f6f6f6;
 margin:0;
-background:linear-gradient(#111,#000);
-color:white;
 }
 
 h1{
-margin-top:10px;
+margin:10px;
 }
 
-#enemy{
-width:150px;
-cursor:pointer;
-transition:transform 0.1s;
+#game{
+max-width:700px;
+margin:auto;
 }
 
-#enemy:active{
-transform:scale(0.9);
-}
-
-#effect{
-font-size:35px;
-color:yellow;
-height:40px;
-}
-
-#hpbar{
-width:80%;
-height:20px;
-background:#444;
-margin:10px auto;
+#question{
+font-size:22px;
+margin:15px;
+padding:15px;
+background:white;
 border-radius:10px;
-overflow:hidden;
 }
 
-#hp{
-height:100%;
-width:100%;
-background:red;
+#cards{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+padding:10px;
+}
+
+.card{
+background:white;
+border-radius:10px;
+padding:20px;
+font-size:20px;
+cursor:pointer;
+box-shadow:0 3px 6px rgba(0,0,0,0.2);
+transition:0.2s;
+}
+
+.card:hover{
+background:#ffeaa7;
+transform:scale(1.05);
+}
+
+#info{
+margin:10px;
+font-size:16px;
+background:white;
+padding:10px;
+border-radius:10px;
 }
 
 button{
-font-size:14px;
-padding:8px 16px;
-margin:4px;
-border:none;
-border-radius:10px;
-background:orange;
-color:white;
+font-size:18px;
+padding:10px 20px;
+margin:10px;
 }
 
+#score{
+font-size:20px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>⚔️イラストタップRPG</h1>
+<h1>古文 助動詞カルタ</h1>
 
-<div id="stage"></div>
+<div id="game">
 
-<img id="enemy" src="https://i.imgur.com/8QfQZ6F.png">
+<div id="score">スコア: 0</div>
 
-<div id="effect"></div>
+<button onclick="startGame()">スタート</button>
 
-<div id="hpbar">
-<div id="hp"></div>
+<div id="question">
+スタートを押すと助動詞の意味が読み上げられます
 </div>
 
-<div id="enemyhp"></div>
+<div id="cards"></div>
 
-<div id="coins"></div>
-<div id="weapon"></div>
-<div id="ally"></div>
+<div id="info"></div>
 
-<button onclick="upgradeWeapon()">武器強化</button>
-<button onclick="hireAlly()">仲間</button>
-<button onclick="skill()">必殺技</button>
+</div>
 
 <script>
 
-let coins = 0
-let weapon = 1
-let ally = 0
-let stage = 1
+const data = [
 
-let hp
-let maxHP
+{aux:"る",meaning:"受身・可能・自発・尊敬",connect:"未然形接続"},
+{aux:"らる",meaning:"受身・可能・自発・尊敬",connect:"未然形接続"},
+{aux:"む",meaning:"推量・意志",connect:"未然形接続"},
+{aux:"けり",meaning:"過去・詠嘆",connect:"連用形接続"},
+{aux:"たり",meaning:"完了・存続",connect:"連用形接続"},
+{aux:"ぬ",meaning:"完了・強意",connect:"連用形接続"},
+{aux:"べし",meaning:"推量・当然・可能・命令",connect:"終止形接続"},
+{aux:"まじ",meaning:"打消推量",connect:"終止形接続"},
+{aux:"ず",meaning:"打消",connect:"未然形接続"},
+{aux:"き",meaning:"過去",connect:"連用形接続"},
+{aux:"らむ",meaning:"現在推量",connect:"終止形接続"},
+{aux:"なり",meaning:"伝聞・推定",connect:"終止形接続"}
 
-const enemies=[
-{img:"https://i.imgur.com/8QfQZ6F.png",hp:40},
-{img:"https://i.imgur.com/BK8QK6F.png",hp:50},
-{img:"https://i.imgur.com/0Z8FQ9T.png",hp:60}
-]
+];
 
-spawnEnemy()
-updateUI()
+let score=0;
+let current;
 
-document.getElementById("enemy").onclick=function(){
-attack(weapon)
+function speak(text){
+const u = new SpeechSynthesisUtterance(text);
+u.lang="ja-JP";
+speechSynthesis.speak(u);
 }
 
-function attack(power){
-
-hp -= power
-
-document.getElementById("effect").innerText="💥-"+power
-
-setTimeout(()=>{
-document.getElementById("effect").innerText=""
-},300)
-
-if(hp<=0){
-
-coins += 10
-
-stage++
-
-spawnEnemy()
-
+function startGame(){
+score=0;
+document.getElementById("score").textContent="スコア: "+score;
+nextQuestion();
 }
 
-updateHP()
+function nextQuestion(){
 
-}
+document.getElementById("info").textContent="";
 
-function spawnEnemy(){
+const cardsDiv=document.getElementById("cards");
+cardsDiv.innerHTML="";
 
-let enemy=enemies[Math.floor(Math.random()*enemies.length)]
+const shuffled=[...data].sort(()=>Math.random()-0.5).slice(0,8);
 
-maxHP=enemy.hp+stage*5
-hp=maxHP
+current=shuffled[Math.floor(Math.random()*shuffled.length)];
 
-document.getElementById("enemy").src=enemy.img
+document.getElementById("question").textContent=
+"この意味の助動詞はどれ？";
 
-updateHP()
+speak(current.meaning);
 
-}
+shuffled.forEach(d=>{
 
-function updateHP(){
+const card=document.createElement("div");
+card.className="card";
+card.textContent=d.aux;
 
-document.getElementById("enemyhp").innerText="HP:"+hp
+card.onclick=()=>{
 
-let percent=(hp/maxHP)*100
+if(d.aux===current.aux){
 
-document.getElementById("hp").style.width=percent+"%"
-
-updateUI()
-
-}
-
-function updateUI(){
-
-document.getElementById("coins").innerText="コイン:"+coins
-document.getElementById("weapon").innerText="武器Lv:"+weapon
-document.getElementById("ally").innerText="仲間:"+ally
-document.getElementById("stage").innerText="ステージ:"+stage
-
-}
-
-function upgradeWeapon(){
-
-let cost=weapon*30
-
-if(coins>=cost){
-
-coins-=cost
-weapon++
+score++;
+document.getElementById("info").innerHTML=
+"⭕ 正解！<br>"+
+"助動詞："+current.aux+"<br>"+
+"意味："+current.meaning+"<br>"+
+"接続："+current.connect;
 
 }else{
 
-alert("コイン不足")
+document.getElementById("info").innerHTML=
+"❌ 不正解<br>"+
+"正解："+current.aux+"<br>"+
+"意味："+current.meaning+"<br>"+
+"接続："+current.connect;
 
 }
 
-updateUI()
+document.getElementById("score").textContent="スコア: "+score;
+
+setTimeout(nextQuestion,2000);
+
+};
+
+cardsDiv.appendChild(card);
+
+});
 
 }
-
-function hireAlly(){
-
-if(coins>=100){
-
-coins-=100
-ally++
-
-}else{
-
-alert("コイン不足")
-
-}
-
-updateUI()
-
-}
-
-function skill(){
-
-attack(weapon*8)
-
-}
-
-setInterval(()=>{
-
-if(ally>0){
-
-attack(ally)
-
-}
-
-},1000)
 
 </script>
 
 </body>
-  </html>
+</html>
