@@ -2,31 +2,28 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>古文 助動詞カルタ（学習用）</title>
+<title>古文 助動詞カルタ（結果保存版）</title>
 
 <style>
+
 body{
 font-family:sans-serif;
 text-align:center;
-background:#f6f6f6;
+background:#f0f0f0;
 margin:0;
 }
 
-h1{
-margin:10px;
-}
-
 #game{
-max-width:700px;
+max-width:800px;
 margin:auto;
 }
 
 #question{
 font-size:22px;
-margin:15px;
-padding:15px;
 background:white;
+padding:15px;
 border-radius:10px;
+margin:10px;
 }
 
 #cards{
@@ -38,25 +35,22 @@ padding:10px;
 
 .card{
 background:white;
-border-radius:10px;
 padding:20px;
+border-radius:10px;
 font-size:20px;
 cursor:pointer;
 box-shadow:0 3px 6px rgba(0,0,0,0.2);
-transition:0.2s;
 }
 
 .card:hover{
 background:#ffeaa7;
-transform:scale(1.05);
 }
 
-#info{
-margin:10px;
-font-size:16px;
+#info,#result{
 background:white;
 padding:10px;
 border-radius:10px;
+margin:10px;
 }
 
 button{
@@ -65,9 +59,6 @@ padding:10px 20px;
 margin:10px;
 }
 
-#score{
-font-size:20px;
-}
 </style>
 </head>
 
@@ -75,108 +66,190 @@ font-size:20px;
 
 <h1>古文 助動詞カルタ</h1>
 
+<button onclick="startGame()">スタート</button>
+<button onclick="resetData()">記録リセット</button>
+
 <div id="game">
 
-<div id="score">スコア: 0</div>
-
-<button onclick="startGame()">スタート</button>
-
-<div id="question">
-スタートを押すと助動詞の意味が読み上げられます
-</div>
+<div id="question">スタートを押してください</div>
 
 <div id="cards"></div>
 
 <div id="info"></div>
 
+<div id="result"></div>
+
 </div>
 
 <script>
 
-const data = [
+const data=[
 
-{aux:"る",meaning:"受身・可能・自発・尊敬",connect:"未然形接続"},
-{aux:"らる",meaning:"受身・可能・自発・尊敬",connect:"未然形接続"},
-{aux:"む",meaning:"推量・意志",connect:"未然形接続"},
-{aux:"けり",meaning:"過去・詠嘆",connect:"連用形接続"},
-{aux:"たり",meaning:"完了・存続",connect:"連用形接続"},
-{aux:"ぬ",meaning:"完了・強意",connect:"連用形接続"},
-{aux:"べし",meaning:"推量・当然・可能・命令",connect:"終止形接続"},
-{aux:"まじ",meaning:"打消推量",connect:"終止形接続"},
-{aux:"ず",meaning:"打消",connect:"未然形接続"},
-{aux:"き",meaning:"過去",connect:"連用形接続"},
-{aux:"らむ",meaning:"現在推量",connect:"終止形接続"},
-{aux:"なり",meaning:"伝聞・推定",connect:"終止形接続"}
+{aux:"る",meaning:"受身・可能・自発・尊敬",connect:"未然形"},
+{aux:"らる",meaning:"受身・可能・自発・尊敬",connect:"未然形"},
+{aux:"す",meaning:"使役",connect:"未然形"},
+{aux:"さす",meaning:"使役",connect:"未然形"},
+{aux:"しむ",meaning:"使役・尊敬",connect:"未然形"},
+{aux:"む",meaning:"推量・意志",connect:"未然形"},
+{aux:"じ",meaning:"打消推量",connect:"未然形"},
+{aux:"まし",meaning:"反実仮想",connect:"未然形"},
+{aux:"ず",meaning:"打消",connect:"未然形"},
+{aux:"き",meaning:"過去",connect:"連用形"},
+{aux:"けり",meaning:"過去・詠嘆",connect:"連用形"},
+{aux:"つ",meaning:"完了・強意",connect:"連用形"},
+{aux:"ぬ",meaning:"完了・強意",connect:"連用形"},
+{aux:"たり",meaning:"完了・存続",connect:"連用形"},
+{aux:"り",meaning:"完了・存続",connect:"サ変未然・四段已然"},
+{aux:"たし",meaning:"希望",connect:"連用形"},
+{aux:"べし",meaning:"推量・当然・可能・命令",connect:"終止形"},
+{aux:"まじ",meaning:"打消推量",connect:"終止形"},
+{aux:"らむ",meaning:"現在推量",connect:"終止形"},
+{aux:"けむ",meaning:"過去推量",connect:"連用形"},
+{aux:"めり",meaning:"推定",connect:"終止形"},
+{aux:"なり",meaning:"伝聞・推定",connect:"終止形"},
+{aux:"らし",meaning:"推定",connect:"終止形"},
+{aux:"ごとし",meaning:"比況",connect:"連体形"}
 
-];
+]
 
-let score=0;
-let current;
+let score=0
+let questionCount=0
+let current
+
+let wrongCount=JSON.parse(localStorage.getItem("kobunWrong"))||{}
+let totalCorrect=Number(localStorage.getItem("kobunCorrect"))||0
+let totalQuestion=Number(localStorage.getItem("kobunQuestion"))||0
+
+data.forEach(d=>{
+if(!wrongCount[d.aux]) wrongCount[d.aux]=0
+})
 
 function speak(text){
-const u = new SpeechSynthesisUtterance(text);
-u.lang="ja-JP";
-speechSynthesis.speak(u);
+
+const u=new SpeechSynthesisUtterance(text)
+u.lang="ja-JP"
+speechSynthesis.speak(u)
+
 }
 
 function startGame(){
-score=0;
-document.getElementById("score").textContent="スコア: "+score;
-nextQuestion();
+
+score=0
+questionCount=0
+
+document.getElementById("result").innerHTML=""
+
+nextQuestion()
+
 }
 
 function nextQuestion(){
 
-document.getElementById("info").textContent="";
+if(questionCount>=10){
 
-const cardsDiv=document.getElementById("cards");
-cardsDiv.innerHTML="";
-
-const shuffled=[...data].sort(()=>Math.random()-0.5).slice(0,8);
-
-current=shuffled[Math.floor(Math.random()*shuffled.length)];
-
-document.getElementById("question").textContent=
-"この意味の助動詞はどれ？";
-
-speak(current.meaning);
-
-shuffled.forEach(d=>{
-
-const card=document.createElement("div");
-card.className="card";
-card.textContent=d.aux;
-
-card.onclick=()=>{
-
-if(d.aux===current.aux){
-
-score++;
-document.getElementById("info").innerHTML=
-"⭕ 正解！<br>"+
-"助動詞："+current.aux+"<br>"+
-"意味："+current.meaning+"<br>"+
-"接続："+current.connect;
-
-}else{
-
-document.getElementById("info").innerHTML=
-"❌ 不正解<br>"+
-"正解："+current.aux+"<br>"+
-"意味："+current.meaning+"<br>"+
-"接続："+current.connect;
+showResult()
+return
 
 }
 
-document.getElementById("score").textContent="スコア: "+score;
+questionCount++
 
-setTimeout(nextQuestion,2000);
+document.getElementById("info").textContent=""
 
-};
+const cardsDiv=document.getElementById("cards")
+cardsDiv.innerHTML=""
 
-cardsDiv.appendChild(card);
+const shuffled=[...data].sort(()=>Math.random()-0.5).slice(0,8)
 
-});
+current=shuffled[Math.floor(Math.random()*shuffled.length)]
+
+document.getElementById("question").textContent=
+"問題 "+questionCount+"：この意味の助動詞は？"
+
+speak(current.meaning)
+
+shuffled.forEach(d=>{
+
+const card=document.createElement("div")
+card.className="card"
+card.textContent=d.aux
+
+card.onclick=()=>{
+
+totalQuestion++
+
+if(d.aux===current.aux){
+
+score++
+totalCorrect++
+
+document.getElementById("info").innerHTML=
+"⭕ 正解<br>"+current.aux+"："+current.meaning+"（"+current.connect+"接続）"
+
+}else{
+
+wrongCount[current.aux]++
+
+document.getElementById("info").innerHTML=
+"❌ 不正解<br>正解："+current.aux+
+"<br>"+current.meaning+"（"+current.connect+"接続）"
+
+}
+
+setTimeout(nextQuestion,2000)
+
+}
+
+cardsDiv.appendChild(card)
+
+})
+
+}
+
+function showResult(){
+
+localStorage.setItem("kobunWrong",JSON.stringify(wrongCount))
+localStorage.setItem("kobunCorrect",totalCorrect)
+localStorage.setItem("kobunQuestion",totalQuestion)
+
+document.getElementById("cards").innerHTML=""
+
+let rate=Math.round(totalCorrect/totalQuestion*100)
+
+let html=
+"今回："+score+" / 10<br>"+
+"累計正答率："+rate+"%<br><br>"
+
+let weak=[]
+
+for(let k in wrongCount){
+
+if(wrongCount[k]>0){
+
+weak.push({aux:k,count:wrongCount[k]})
+
+}
+
+}
+
+weak.sort((a,b)=>b.count-a.count)
+
+html+="苦手助動詞<br>"
+
+weak.slice(0,5).forEach(w=>{
+
+html+=w.aux+"（"+w.count+"回ミス）<br>"
+
+})
+
+document.getElementById("result").innerHTML=html
+
+}
+
+function resetData(){
+
+localStorage.clear()
+alert("記録をリセットしました")
 
 }
 
