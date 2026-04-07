@@ -2,15 +2,29 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>古文 助動詞カルタ（結果保存版）</title>
+<title>古文 助動詞カルタ 学習ゲーム</title>
 
 <style>
 
 body{
 font-family:sans-serif;
 text-align:center;
-background:#f0f0f0;
+background:#f2f2f2;
 margin:0;
+}
+
+h1{
+margin:10px;
+}
+
+#menu{
+margin:10px;
+}
+
+button{
+font-size:16px;
+padding:10px 20px;
+margin:5px;
 }
 
 #game{
@@ -46,38 +60,50 @@ box-shadow:0 3px 6px rgba(0,0,0,0.2);
 background:#ffeaa7;
 }
 
-#info,#result{
+#info,#result,#dictionary{
 background:white;
+margin:10px;
 padding:10px;
 border-radius:10px;
-margin:10px;
 }
 
-button{
-font-size:18px;
-padding:10px 20px;
-margin:10px;
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+td,th{
+border:1px solid #ccc;
+padding:5px;
 }
 
 </style>
-</head>
 
+</head>
 <body>
 
 <h1>古文 助動詞カルタ</h1>
 
-<button onclick="startGame()">スタート</button>
+<div id="menu">
+
+<button onclick="startGame()">通常テスト</button>
+<button onclick="startWeakMode()">苦手特訓</button>
+<button onclick="showDictionary()">助動詞図鑑</button>
 <button onclick="resetData()">記録リセット</button>
+
+</div>
 
 <div id="game">
 
-<div id="question">スタートを押してください</div>
+<div id="question">モードを選んでください</div>
 
 <div id="cards"></div>
 
 <div id="info"></div>
 
 <div id="result"></div>
+
+<div id="dictionary"></div>
 
 </div>
 
@@ -112,10 +138,6 @@ const data=[
 
 ]
 
-let score=0
-let questionCount=0
-let current
-
 let wrongCount=JSON.parse(localStorage.getItem("kobunWrong"))||{}
 let totalCorrect=Number(localStorage.getItem("kobunCorrect"))||0
 let totalQuestion=Number(localStorage.getItem("kobunQuestion"))||0
@@ -123,6 +145,11 @@ let totalQuestion=Number(localStorage.getItem("kobunQuestion"))||0
 data.forEach(d=>{
 if(!wrongCount[d.aux]) wrongCount[d.aux]=0
 })
+
+let score=0
+let questionCount=0
+let current
+let mode="normal"
 
 function speak(text){
 
@@ -134,12 +161,35 @@ speechSynthesis.speak(u)
 
 function startGame(){
 
+mode="normal"
 score=0
 questionCount=0
-
-document.getElementById("result").innerHTML=""
-
+document.getElementById("dictionary").innerHTML=""
 nextQuestion()
+
+}
+
+function startWeakMode(){
+
+mode="weak"
+score=0
+questionCount=0
+document.getElementById("dictionary").innerHTML=""
+nextQuestion()
+
+}
+
+function getQuestionPool(){
+
+if(mode==="weak"){
+
+let weak=data.filter(d=>wrongCount[d.aux]>0)
+
+if(weak.length>0) return weak
+
+}
+
+return data
 
 }
 
@@ -154,12 +204,12 @@ return
 
 questionCount++
 
-document.getElementById("info").textContent=""
+const pool=getQuestionPool()
 
 const cardsDiv=document.getElementById("cards")
 cardsDiv.innerHTML=""
 
-const shuffled=[...data].sort(()=>Math.random()-0.5).slice(0,8)
+const shuffled=[...pool].sort(()=>Math.random()-0.5).slice(0,8)
 
 current=shuffled[Math.floor(Math.random()*shuffled.length)]
 
@@ -184,19 +234,18 @@ score++
 totalCorrect++
 
 document.getElementById("info").innerHTML=
-"⭕ 正解<br>"+current.aux+"："+current.meaning+"（"+current.connect+"接続）"
+"⭕ "+current.aux+"："+current.meaning
 
 }else{
 
 wrongCount[current.aux]++
 
 document.getElementById("info").innerHTML=
-"❌ 不正解<br>正解："+current.aux+
-"<br>"+current.meaning+"（"+current.connect+"接続）"
+"❌ 正解："+current.aux+" "+current.meaning
 
 }
 
-setTimeout(nextQuestion,2000)
+setTimeout(nextQuestion,1500)
 
 }
 
@@ -212,37 +261,31 @@ localStorage.setItem("kobunWrong",JSON.stringify(wrongCount))
 localStorage.setItem("kobunCorrect",totalCorrect)
 localStorage.setItem("kobunQuestion",totalQuestion)
 
-document.getElementById("cards").innerHTML=""
-
 let rate=Math.round(totalCorrect/totalQuestion*100)
 
-let html=
-"今回："+score+" / 10<br>"+
-"累計正答率："+rate+"%<br><br>"
+document.getElementById("cards").innerHTML=""
 
-let weak=[]
+document.getElementById("result").innerHTML=
 
-for(let k in wrongCount){
-
-if(wrongCount[k]>0){
-
-weak.push({aux:k,count:wrongCount[k]})
+"今回："+score+"/10<br>"+
+"累計正答率："+rate+"%"
 
 }
 
-}
+function showDictionary(){
 
-weak.sort((a,b)=>b.count-a.count)
+let html="<h3>助動詞図鑑</h3><table>"
+html+="<tr><th>助動詞</th><th>意味</th><th>接続</th></tr>"
 
-html+="苦手助動詞<br>"
+data.forEach(d=>{
 
-weak.slice(0,5).forEach(w=>{
-
-html+=w.aux+"（"+w.count+"回ミス）<br>"
+html+="<tr><td>"+d.aux+"</td><td>"+d.meaning+"</td><td>"+d.connect+"</td></tr>"
 
 })
 
-document.getElementById("result").innerHTML=html
+html+="</table>"
+
+document.getElementById("dictionary").innerHTML=html
 
 }
 
