@@ -1,301 +1,302 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>古文 助動詞カルタ 学習ゲーム</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>間違い探しタイム測定</title>
 
 <style>
-
-body{
-font-family:sans-serif;
-text-align:center;
-background:#f2f2f2;
-margin:0;
+* {
+  box-sizing: border-box;
 }
 
-h1{
-margin:10px;
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+  background: #f3f5f7;
+  color: #222;
 }
 
-#menu{
-margin:10px;
+main {
+  max-width: 1100px;
+  margin: auto;
 }
 
-button{
-font-size:16px;
-padding:10px 20px;
-margin:5px;
+h1 {
+  text-align: center;
 }
 
-#game{
-max-width:800px;
-margin:auto;
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 18px;
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 12px;
 }
 
-#question{
-font-size:22px;
-background:white;
-padding:15px;
-border-radius:10px;
-margin:10px;
+.timer {
+  font-size: 36px;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
 }
 
-#cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-padding:10px;
+.count {
+  font-size: 20px;
+  font-weight: bold;
 }
 
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-font-size:20px;
-cursor:pointer;
-box-shadow:0 3px 6px rgba(0,0,0,0.2);
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #1674c0;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.card:hover{
-background:#ffeaa7;
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
-#info,#result,#dictionary{
-background:white;
-margin:10px;
-padding:10px;
-border-radius:10px;
+#reset {
+  background: #555;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
+.hint {
+  text-align: center;
+  line-height: 1.7;
 }
 
-td,th{
-border:1px solid #ccc;
-padding:5px;
+.puzzle {
+  position: relative;
+  width: 100%;
+  line-height: 0;
 }
 
+.puzzle img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 5.5%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.target.found {
+  border-color: #00a45a;
+  background: #00a45a30;
+}
+
+#message {
+  min-height: 30px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+
+  .timer {
+    font-size: 28px;
+  }
+
+  .count {
+    font-size: 17px;
+  }
+}
 </style>
-
 </head>
+
 <body>
+<main>
 
-<h1>古文 助動詞カルタ</h1>
+<h1>間違い探しタイム測定</h1>
 
-<div id="menu">
+<div class="panel">
+  <div>
+    <div>経過時間</div>
+    <div class="timer" id="timer">00:00.0</div>
+  </div>
 
-<button onclick="startGame()">通常テスト</button>
-<button onclick="startWeakMode()">苦手特訓</button>
-<button onclick="showDictionary()">助動詞図鑑</button>
-<button onclick="resetData()">記録リセット</button>
+  <div class="count" id="count">
+    見つけた間違い：0 / 8
+  </div>
 
+  <div>
+    <button id="start">スタート</button>
+    <button id="reset">やり直す</button>
+  </div>
 </div>
 
-<div id="game">
+<p class="hint">
+  左右の絵を見比べて、右側の絵の間違いをクリックしてください。<br>
+  8個見つけるとタイマーが自動で止まります。
+</p>
 
-<div id="question">モードを選んでください</div>
+<div class="puzzle" id="puzzle">
+  <img src="あ.webp" alt="間違い探しの問題">
 
-<div id="cards"></div>
+  <!-- 正解位置：画像全体に対する割合 -->
+  <button class="target" data-id="1"
+    style="left:53.7%;top:48%;"
+    aria-label="間違い1"></button>
 
-<div id="info"></div>
+  <button class="target" data-id="2"
+    style="left:75.2%;top:37.7%;"
+    aria-label="間違い2"></button>
 
-<div id="result"></div>
+  <button class="target" data-id="3"
+    style="left:69.4%;top:70.8%;"
+    aria-label="間違い3"></button>
 
-<div id="dictionary"></div>
+  <button class="target" data-id="4"
+    style="left:55%;top:85%;"
+    aria-label="間違い4"></button>
 
+  <button class="target" data-id="5"
+    style="left:91.4%;top:42%;"
+    aria-label="間違い5"></button>
+
+  <button class="target" data-id="6"
+    style="left:77.6%;top:51.9%;"
+    aria-label="間違い6"></button>
+
+  <button class="target" data-id="7"
+    style="left:61.3%;top:35.2%;"
+    aria-label="間違い7"></button>
+
+  <button class="target" data-id="8"
+    style="left:88.7%;top:16.7%;"
+    aria-label="間違い8"></button>
 </div>
+
+<p id="message">スタートを押して始めてください。</p>
+
+</main>
 
 <script>
+const timer = document.getElementById("timer");
+const count = document.getElementById("count");
+const message = document.getElementById("message");
+const startButton = document.getElementById("start");
+const resetButton = document.getElementById("reset");
+const targets = document.querySelectorAll(".target");
 
-const data=[
+let started = false;
+let finished = false;
+let found = 0;
+let startTime = 0;
+let elapsed = 0;
+let animationId = null;
 
-{aux:"る",meaning:"受身・可能・自発・尊敬",connect:"未然形"},
-{aux:"らる",meaning:"受身・可能・自発・尊敬",connect:"未然形"},
-{aux:"す",meaning:"使役",connect:"未然形"},
-{aux:"さす",meaning:"使役",connect:"未然形"},
-{aux:"しむ",meaning:"使役・尊敬",connect:"未然形"},
-{aux:"む",meaning:"推量・意志",connect:"未然形"},
-{aux:"じ",meaning:"打消推量",connect:"未然形"},
-{aux:"まし",meaning:"反実仮想",connect:"未然形"},
-{aux:"ず",meaning:"打消",connect:"未然形"},
-{aux:"き",meaning:"過去",connect:"連用形"},
-{aux:"けり",meaning:"過去・詠嘆",connect:"連用形"},
-{aux:"つ",meaning:"完了・強意",connect:"連用形"},
-{aux:"ぬ",meaning:"完了・強意",connect:"連用形"},
-{aux:"たり",meaning:"完了・存続",connect:"連用形"},
-{aux:"り",meaning:"完了・存続",connect:"サ変未然・四段已然"},
-{aux:"たし",meaning:"希望",connect:"連用形"},
-{aux:"べし",meaning:"推量・当然・可能・命令",connect:"終止形"},
-{aux:"まじ",meaning:"打消推量",connect:"終止形"},
-{aux:"らむ",meaning:"現在推量",connect:"終止形"},
-{aux:"けむ",meaning:"過去推量",connect:"連用形"},
-{aux:"めり",meaning:"推定",connect:"終止形"},
-{aux:"なり",meaning:"伝聞・推定",connect:"終止形"},
-{aux:"らし",meaning:"推定",connect:"終止形"},
-{aux:"ごとし",meaning:"比況",connect:"連体形"}
+function formatTime(ms) {
+  const tenths = Math.floor(ms / 100);
+  const minutes = Math.floor(tenths / 600);
+  const seconds = Math.floor(tenths / 10) % 60;
+  const decimal = tenths % 10;
 
-]
-
-let wrongCount=JSON.parse(localStorage.getItem("kobunWrong"))||{}
-let totalCorrect=Number(localStorage.getItem("kobunCorrect"))||0
-let totalQuestion=Number(localStorage.getItem("kobunQuestion"))||0
-
-data.forEach(d=>{
-if(!wrongCount[d.aux]) wrongCount[d.aux]=0
-})
-
-let score=0
-let questionCount=0
-let current
-let mode="normal"
-
-function speak(text){
-
-const u=new SpeechSynthesisUtterance(text)
-u.lang="ja-JP"
-speechSynthesis.speak(u)
-
+  return (
+    String(minutes).padStart(2, "0") + ":" +
+    String(seconds).padStart(2, "0") + "." +
+    decimal
+  );
 }
 
-function startGame(){
+function updateTimer() {
+  if (!started || finished) return;
 
-mode="normal"
-score=0
-questionCount=0
-document.getElementById("dictionary").innerHTML=""
-nextQuestion()
+  elapsed = performance.now() - startTime;
+  timer.textContent = formatTime(elapsed);
 
+  animationId = requestAnimationFrame(updateTimer);
 }
 
-function startWeakMode(){
+function startTimer() {
+  if (started || finished) return;
 
-mode="weak"
-score=0
-questionCount=0
-document.getElementById("dictionary").innerHTML=""
-nextQuestion()
+  started = true;
+  startTime = performance.now() - elapsed;
 
+  startButton.disabled = true;
+  message.textContent = "間違いを探してください！";
+
+  updateTimer();
 }
 
-function getQuestionPool(){
+startButton.addEventListener("click", startTimer);
 
-if(mode==="weak"){
+targets.forEach((target) => {
+  target.addEventListener("click", () => {
+    if (finished || target.classList.contains("found")) {
+      return;
+    }
 
-let weak=data.filter(d=>wrongCount[d.aux]>0)
+    // 最初のクリックでタイマーを開始
+    if (!started) {
+      startTimer();
+    }
 
-if(weak.length>0) return weak
+    target.classList.add("found");
+    target.disabled = true;
+    found++;
 
-}
+    count.textContent =
+      "見つけた間違い：" + found + " / 8";
 
-return data
+    if (found === 8) {
+      finished = true;
+      elapsed = performance.now() - startTime;
 
-}
+      cancelAnimationFrame(animationId);
 
-function nextQuestion(){
+      timer.textContent = formatTime(elapsed);
+      message.textContent =
+        "クリア！ タイム：" + formatTime(elapsed);
 
-if(questionCount>=10){
+      startButton.disabled = true;
+    }
+  });
+});
 
-showResult()
-return
+resetButton.addEventListener("click", () => {
+  cancelAnimationFrame(animationId);
 
-}
+  started = false;
+  finished = false;
+  found = 0;
+  elapsed = 0;
+  startTime = 0;
 
-questionCount++
+  timer.textContent = "00:00.0";
+  count.textContent = "見つけた間違い：0 / 8";
+  message.textContent = "スタートを押して始めてください。";
 
-const pool=getQuestionPool()
+  startButton.disabled = false;
 
-const cardsDiv=document.getElementById("cards")
-cardsDiv.innerHTML=""
-
-const shuffled=[...pool].sort(()=>Math.random()-0.5).slice(0,8)
-
-current=shuffled[Math.floor(Math.random()*shuffled.length)]
-
-document.getElementById("question").textContent=
-"問題 "+questionCount+"：この意味の助動詞は？"
-
-speak(current.meaning)
-
-shuffled.forEach(d=>{
-
-const card=document.createElement("div")
-card.className="card"
-card.textContent=d.aux
-
-card.onclick=()=>{
-
-totalQuestion++
-
-if(d.aux===current.aux){
-
-score++
-totalCorrect++
-
-document.getElementById("info").innerHTML=
-"⭕ "+current.aux+"："+current.meaning
-
-}else{
-
-wrongCount[current.aux]++
-
-document.getElementById("info").innerHTML=
-"❌ 正解："+current.aux+" "+current.meaning
-
-}
-
-setTimeout(nextQuestion,1500)
-
-}
-
-cardsDiv.appendChild(card)
-
-})
-
-}
-
-function showResult(){
-
-localStorage.setItem("kobunWrong",JSON.stringify(wrongCount))
-localStorage.setItem("kobunCorrect",totalCorrect)
-localStorage.setItem("kobunQuestion",totalQuestion)
-
-let rate=Math.round(totalCorrect/totalQuestion*100)
-
-document.getElementById("cards").innerHTML=""
-
-document.getElementById("result").innerHTML=
-
-"今回："+score+"/10<br>"+
-"累計正答率："+rate+"%"
-
-}
-
-function showDictionary(){
-
-let html="<h3>助動詞図鑑</h3><table>"
-html+="<tr><th>助動詞</th><th>意味</th><th>接続</th></tr>"
-
-data.forEach(d=>{
-
-html+="<tr><td>"+d.aux+"</td><td>"+d.meaning+"</td><td>"+d.connect+"</td></tr>"
-
-})
-
-html+="</table>"
-
-document.getElementById("dictionary").innerHTML=html
-
-}
-
-function resetData(){
-
-localStorage.clear()
-alert("記録をリセットしました")
-
-}
-
+  targets.forEach((target) => {
+    target.classList.remove("found");
+    target.disabled = false;
+  });
+});
 </script>
 
 </body>
