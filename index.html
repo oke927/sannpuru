@@ -153,7 +153,7 @@
     <h1>間違い探し（8箇所見つけよう！）</h1>
     <div class="status-panel">
       <div class="score-box">発見: <span id="found-count">0</span> / 8</div>
-      <div class="timer-box">タイム: <span id="timer-display">00:00.0</span></div>
+      <div class="timer-box">タイム: <span id="timer-display">0.0秒</span></div>
     </div>
   </header>
 
@@ -166,7 +166,7 @@
     <div class="modal-content">
       <h2>🎉 GAME CLEAR! 🎉</h2>
       <p>8箇所の間違いを発見しました！</p>
-      <p>クリアタイム: <strong id="final-time" style="color: #e74c3c;">00:00.0</strong></p>
+      <p>クリアタイム: <strong id="final-time" style="color: #e74c3c;">0.0秒</strong></p>
       <button class="btn-retry" onclick="resetGame()">もう一度挑戦する</button>
     </div>
   </div>
@@ -175,7 +175,7 @@
     // 画像上の間違い箇所10個の定義（％指定：[X%, Y%, 判定半径%]）
     const DIFFERENCES = [
       { id: 1,  x: 55.0, y: 8.5,  radius: 3.5 }, // 1. KidsMenuの「d」の文字
-      { id: 2,  x: 59.5, y: 26.5, radius: 3.5 }, // 2. ドリンクバーのオレンジジュース（少し左に修正・半径拡大）
+      { id: 2,  x: 59.5, y: 26.5, radius: 3.5 }, // 2. ドリンクバーのオレンジジュース
       { id: 3,  x: 71.0, y: 28.0, radius: 3.0 }, // 3. ドレッシングボトル（振りかけ）
       { id: 4,  x: 88.5, y: 29.5, radius: 3.0 }, // 4. 背景のカップサーバー／持ち手
       { id: 5,  x: 96.0, y: 53.0, radius: 4.5 }, // 5. ひつじのキャラクター（消えている）
@@ -208,15 +208,10 @@
       timerDisplayEl.textContent = formatTime(elapsedMs);
     }
 
+    // ミリ秒を「〜秒（小数点以下1桁）」形式にフォーマット
     function formatTime(ms) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      const tenths = Math.floor((ms % 1000) / 100);
-
-      const mStr = String(minutes).padStart(2, '0');
-      const sStr = String(seconds).padStart(2, '0');
-      return `${mStr}:${sStr}.${tenths}`;
+      const seconds = (ms / 1000).toFixed(1);
+      return `${seconds}秒`;
     }
 
     gameContainer.addEventListener('click', (e) => {
@@ -289,7 +284,7 @@
       clearInterval(timerInterval);
 
       foundCountEl.textContent = '0';
-      timerDisplayEl.textContent = '00:00.0';
+      timerDisplayEl.textContent = '0.0秒';
       clearModal.classList.remove('active');
 
       const markers = document.querySelectorAll('.marker');
