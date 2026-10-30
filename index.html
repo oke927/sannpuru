@@ -158,7 +158,6 @@
   </header>
 
   <main class="game-container" id="game-container">
-    <!-- 同じフォルダ内の game-image.png を読み込みます -->
     <img src="game-image.png" id="game-image" class="game-image" alt="間違い探し画像">
   </main>
 
@@ -176,7 +175,7 @@
     // 画像上の間違い箇所10個の定義（％指定：[X%, Y%, 判定半径%]）
     const DIFFERENCES = [
       { id: 1,  x: 55.0, y: 8.5,  radius: 3.5 }, // 1. KidsMenuの「d」の文字
-      { id: 2,  x: 62.2, y: 26.5, radius: 3.0 }, // 2. 背景のカップ／ジュース
+      { id: 2,  x: 59.5, y: 26.5, radius: 3.5 }, // 2. ドリンクバーのオレンジジュース（少し左に修正・半径拡大）
       { id: 3,  x: 71.0, y: 28.0, radius: 3.0 }, // 3. ドレッシングボトル（振りかけ）
       { id: 4,  x: 88.5, y: 29.5, radius: 3.0 }, // 4. 背景のカップサーバー／持ち手
       { id: 5,  x: 96.0, y: 53.0, radius: 4.5 }, // 5. ひつじのキャラクター（消えている）
