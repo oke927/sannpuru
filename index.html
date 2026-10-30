@@ -88,14 +88,14 @@
       100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
 
-    /* クリアモーダルダイアログ */
+    /* モーダル共通スタイル（スタート画面・クリア画面） */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -112,38 +112,55 @@
 
     .modal-content {
       background: white;
-      padding: 25px 35px;
-      border-radius: 12px;
+      padding: 30px 40px;
+      border-radius: 16px;
       text-align: center;
-      max-width: 400px;
+      max-width: 420px;
       width: 90%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
 
     .modal-content h2 {
-      color: #27ae60;
       font-size: 1.8rem;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .start-modal h2 {
+      color: #2c3e50;
+    }
+
+    .clear-modal h2 {
+      color: #27ae60;
     }
 
     .modal-content p {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
+      font-size: 1.1rem;
+      color: #555;
+      margin-bottom: 24px;
+      line-height: 1.5;
     }
 
-    .btn-retry {
-      background-color: #3498db;
+    .btn-action {
+      background-color: #ff5722;
       color: white;
       border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 6px;
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 30px;
       cursor: pointer;
-      transition: background 0.2s;
+      box-shadow: 0 4px 10px rgba(255, 87, 34, 0.4);
+      transition: all 0.2s ease;
     }
 
-    .btn-retry:hover {
-      background-color: #2980b9;
+    .btn-action:hover {
+      background-color: #e64a19;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(255, 87, 34, 0.5);
+    }
+
+    .btn-action:active {
+      transform: translateY(0);
     }
   </style>
 </head>
@@ -161,13 +178,21 @@
     <img src="game-image.png" id="game-image" class="game-image" alt="間違い探し画像">
   </main>
 
+  <!-- スタート画面モーダル -->
+  <div class="modal-overlay start-modal active" id="start-modal">
+    <div class="modal-content">
+      <h2>🔍 間違い探しゲーム 🔍</h2>
+      <p>右側の画像から間違いを<strong>8箇所</strong>見つけよう！<br>スタートボタンを押すとタイマーが動きます。</p>
+      <button class="btn-action" onclick="startGame()">ゲームスタート</button>
+    </div>
+  </div>
+
   <!-- クリア画面モーダル -->
-  <div class="modal-overlay" id="clear-modal">
+  <div class="modal-overlay clear-modal" id="clear-modal">
     <div class="modal-content">
       <h2>🎉 GAME CLEAR! 🎉</h2>
-      <p>8箇所の間違いを発見しました！</p>
-      <p>クリアタイム: <strong id="final-time" style="color: #e74c3c;">0.0秒</strong></p>
-      <button class="btn-retry" onclick="resetGame()">もう一度挑戦する</button>
+      <p>8箇所の間違いを発見しました！<br>クリアタイム: <strong id="final-time" style="color: #e74c3c; font-size: 1.3rem;">0.0秒</strong></p>
+      <button class="btn-action" style="background-color: #3498db; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);" onclick="resetGame()">もう一度挑戦する</button>
     </div>
   </div>
 
@@ -189,13 +214,21 @@
     let foundIds = new Set();
     let startTime = null;
     let timerInterval = null;
-    let isFinished = false;
+    let isPlaying = false;
 
     const gameContainer = document.getElementById('game-container');
     const foundCountEl = document.getElementById('found-count');
     const timerDisplayEl = document.getElementById('timer-display');
+    const startModal = document.getElementById('start-modal');
     const clearModal = document.getElementById('clear-modal');
     const finalTimeEl = document.getElementById('final-time');
+
+    // ゲーム開始ボタンが押されたとき
+    function startGame() {
+      startModal.classList.remove('active');
+      isPlaying = true;
+      startTimer();
+    }
 
     function startTimer() {
       startTime = Date.now();
@@ -208,18 +241,14 @@
       timerDisplayEl.textContent = formatTime(elapsedMs);
     }
 
-    // ミリ秒を「〜秒（小数点以下1桁）」形式にフォーマット
     function formatTime(ms) {
       const seconds = (ms / 1000).toFixed(1);
       return `${seconds}秒`;
     }
 
     gameContainer.addEventListener('click', (e) => {
-      if (isFinished) return;
-
-      if (!startTime) {
-        startTimer();
-      }
+      // ゲームプレイ中でない場合はクリックを無効化
+      if (!isPlaying) return;
 
       const rect = gameContainer.getBoundingClientRect();
       const clickXPercent = ((e.clientX - rect.left) / rect.width) * 100;
@@ -266,7 +295,7 @@
     }
 
     function finishGame() {
-      isFinished = true;
+      isPlaying = false;
       clearInterval(timerInterval);
       const elapsedMs = Date.now() - startTime;
       const formattedTime = formatTime(elapsedMs);
@@ -277,9 +306,10 @@
       }, 300);
     }
 
+    // ゲームリセット（スタート画面に戻る）
     function resetGame() {
       foundIds.clear();
-      isFinished = false;
+      isPlaying = false;
       startTime = null;
       clearInterval(timerInterval);
 
@@ -287,8 +317,12 @@
       timerDisplayEl.textContent = '0.0秒';
       clearModal.classList.remove('active');
 
+      // 赤丸マーカーの削除
       const markers = document.querySelectorAll('.marker');
       markers.forEach(m => m.remove());
+
+      // スタート画面を表示
+      startModal.classList.add('active');
     }
   </script>
 </body>
