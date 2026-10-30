@@ -158,8 +158,8 @@
   </header>
 
   <main class="game-container" id="game-container">
-    <!-- アップロードされた間違い探しの画像を表示 -->
-    <img src="https://i.ibb.co/68037k8/spot-difference.png" id="game-image" class="game-image" alt="間違い探し画像">
+    <!-- 同じフォルダ内の game-image.png を読み込みます -->
+    <img src="game-image.png" id="game-image" class="game-image" alt="間違い探し画像">
   </main>
 
   <!-- クリア画面モーダル -->
@@ -174,7 +174,6 @@
 
   <script>
     // 画像上の間違い箇所10個の定義（％指定：[X%, Y%, 判定半径%]）
-    // 提供画像の右半分（正解・間違い箇所）に設置
     const DIFFERENCES = [
       { id: 1,  x: 55.0, y: 8.5,  radius: 3.5 }, // 1. KidsMenuの「d」の文字
       { id: 2,  x: 62.2, y: 26.5, radius: 3.0 }, // 2. 背景のカップ／ジュース
@@ -199,20 +198,17 @@
     const clearModal = document.getElementById('clear-modal');
     const finalTimeEl = document.getElementById('final-time');
 
-    // タイマー開始
     function startTimer() {
       startTime = Date.now();
       timerInterval = setInterval(updateTimer, 100);
     }
 
-    // タイマー更新
     function updateTimer() {
       if (!startTime) return;
       const elapsedMs = Date.now() - startTime;
       timerDisplayEl.textContent = formatTime(elapsedMs);
     }
 
-    // ミリ秒を mm:ss.d 形式にフォーマット
     function formatTime(ms) {
       const totalSeconds = Math.floor(ms / 1000);
       const minutes = Math.floor(totalSeconds / 60);
@@ -224,7 +220,6 @@
       return `${mStr}:${sStr}.${tenths}`;
     }
 
-    // タップ・クリックイベント判定
     gameContainer.addEventListener('click', (e) => {
       if (isFinished) return;
 
@@ -236,17 +231,14 @@
       const clickXPercent = ((e.clientX - rect.left) / rect.width) * 100;
       const clickYPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
-      // クリック位置が間違い箇所に含まれるかチェック
       for (const diff of DIFFERENCES) {
         if (foundIds.has(diff.id)) continue;
 
-        // 判定エリア（円形）の距離計算
         const dx = clickXPercent - diff.x;
         const dy = clickYPercent - diff.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance <= diff.radius) {
-          // 正解処理
           foundIds.add(diff.id);
           addMarker(diff.x, diff.y, diff.radius);
           updateScore();
@@ -255,7 +247,6 @@
       }
     });
 
-    // 正解の赤い丸を描画
     function addMarker(xPercent, yPercent, radiusPercent) {
       const marker = document.createElement('div');
       marker.className = 'marker';
@@ -271,7 +262,6 @@
       gameContainer.appendChild(marker);
     }
 
-    // スコア更新 & 8個達成でクリア
     function updateScore() {
       const count = foundIds.size;
       foundCountEl.textContent = count;
@@ -281,7 +271,6 @@
       }
     }
 
-    // ゲーム終了処理
     function finishGame() {
       isFinished = true;
       clearInterval(timerInterval);
@@ -294,7 +283,6 @@
       }, 300);
     }
 
-    // ゲームリセット
     function resetGame() {
       foundIds.clear();
       isFinished = false;
@@ -305,7 +293,6 @@
       timerDisplayEl.textContent = '00:00.0';
       clearModal.classList.remove('active');
 
-      // 設置した赤丸マーカーを削除
       const markers = document.querySelectorAll('.marker');
       markers.forEach(m => m.remove());
     }
