@@ -1,303 +1,314 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>間違い探しタイム測定</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>間違い探しゲーム</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+    }
 
-<style>
-* {
-  box-sizing: border-box;
-}
+    header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+    }
 
-body {
-  margin: 0;
-  padding: 20px;
-  font-family: sans-serif;
-  background: #f3f5f7;
-  color: #222;
-}
+    h1 {
+      font-size: 1.2rem;
+      color: #2c3e50;
+    }
 
-main {
-  max-width: 1100px;
-  margin: auto;
-}
+    .status-panel {
+      display: flex;
+      gap: 20px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
 
-h1 {
-  text-align: center;
-}
+    .timer-box {
+      color: #e74c3c;
+    }
 
-.panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 15px;
-  padding: 18px;
-  margin-bottom: 20px;
-  background: white;
-  border-radius: 12px;
-}
+    .score-box {
+      color: #27ae60;
+    }
 
-.timer {
-  font-size: 36px;
-  font-weight: bold;
-  font-variant-numeric: tabular-nums;
-}
+    /* ゲームエリア */
+    .game-container {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
 
-.count {
-  font-size: 20px;
-  font-weight: bold;
-}
+    .game-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
 
-button {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  background: #1674c0;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
+    /* 正解マーカー (赤い円) */
+    .marker {
+      position: absolute;
+      border: 3px solid #ff2a2a;
+      background-color: rgba(255, 42, 42, 0.25);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pop 0.3s ease-out;
+    }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+    @keyframes pop {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
 
-#reset {
-  background: #555;
-}
+    /* クリアモーダルダイアログ */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 100;
+    }
 
-.hint {
-  text-align: center;
-  line-height: 1.7;
-}
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
-.puzzle {
-  position: relative;
-  width: 100%;
-  line-height: 0;
-}
+    .modal-content {
+      background: white;
+      padding: 25px 35px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
 
-.puzzle img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
+    .modal-content h2 {
+      color: #27ae60;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
 
-.target {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 5.5%;
-  aspect-ratio: 1;
-  padding: 0;
-  border: 3px solid transparent;
-  border-radius: 50%;
-  background: transparent;
-}
+    .modal-content p {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
 
-.target.found {
-  border-color: #00a45a;
-  background: #00a45a30;
-}
+    .btn-retry {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
 
-#message {
-  min-height: 30px;
-  text-align: center;
-  font-weight: bold;
-  font-size: 18px;
-}
-
-@media (max-width: 600px) {
-  body {
-    padding: 8px;
-  }
-
-  .timer {
-    font-size: 28px;
-  }
-
-  .count {
-    font-size: 17px;
-  }
-}
-</style>
+    .btn-retry:hover {
+      background-color: #2980b9;
+    }
+  </style>
 </head>
-
 <body>
-<main>
 
-<h1>間違い探しタイム測定</h1>
+  <header>
+    <h1>間違い探し（8箇所見つけよう！）</h1>
+    <div class="status-panel">
+      <div class="score-box">発見: <span id="found-count">0</span> / 8</div>
+      <div class="timer-box">タイム: <span id="timer-display">00:00.0</span></div>
+    </div>
+  </header>
 
-<div class="panel">
-  <div>
-    <div>経過時間</div>
-    <div class="timer" id="timer">00:00.0</div>
+  <main class="game-container" id="game-container">
+    <!-- アップロードされた間違い探しの画像を表示 -->
+    <img src="https://i.ibb.co/68037k8/spot-difference.png" id="game-image" class="game-image" alt="間違い探し画像">
+  </main>
+
+  <!-- クリア画面モーダル -->
+  <div class="modal-overlay" id="clear-modal">
+    <div class="modal-content">
+      <h2>🎉 GAME CLEAR! 🎉</h2>
+      <p>8箇所の間違いを発見しました！</p>
+      <p>クリアタイム: <strong id="final-time" style="color: #e74c3c;">00:00.0</strong></p>
+      <button class="btn-retry" onclick="resetGame()">もう一度挑戦する</button>
+    </div>
   </div>
 
-  <div class="count" id="count">
-    見つけた間違い：0 / 8
-  </div>
+  <script>
+    // 画像上の間違い箇所10個の定義（％指定：[X%, Y%, 判定半径%]）
+    // 提供画像の右半分（正解・間違い箇所）に設置
+    const DIFFERENCES = [
+      { id: 1,  x: 55.0, y: 8.5,  radius: 3.5 }, // 1. KidsMenuの「d」の文字
+      { id: 2,  x: 62.2, y: 26.5, radius: 3.0 }, // 2. 背景のカップ／ジュース
+      { id: 3,  x: 71.0, y: 28.0, radius: 3.0 }, // 3. ドレッシングボトル（振りかけ）
+      { id: 4,  x: 88.5, y: 29.5, radius: 3.0 }, // 4. 背景のカップサーバー／持ち手
+      { id: 5,  x: 96.0, y: 53.0, radius: 4.5 }, // 5. ひつじのキャラクター（消えている）
+      { id: 6,  x: 65.5, y: 60.5, radius: 3.5 }, // 6. オリーブオイルのボトルキャップ
+      { id: 7,  x: 91.8, y: 62.5, radius: 3.0 }, // 7. 女の子のリボンの色
+      { id: 8,  x: 56.5, y: 68.5, radius: 3.5 }, // 8. シュノーケル帽子の男の子の目
+      { id: 9,  x: 60.8, y: 82.5, radius: 3.5 }, // 9. 看板（Make Your Favorite）の欠け
+      { id: 10, x: 82.5, y: 84.5, radius: 4.0 }  // 10. 唐辛子ボトルのラベル／色
+    ];
 
-  <div>
-    <button id="start">スタート</button>
-    <button id="reset">やり直す</button>
-  </div>
-</div>
+    let foundIds = new Set();
+    let startTime = null;
+    let timerInterval = null;
+    let isFinished = false;
 
-<p class="hint">
-  左右の絵を見比べて、右側の絵の間違いをクリックしてください。<br>
-  8個見つけるとタイマーが自動で止まります。
-</p>
+    const gameContainer = document.getElementById('game-container');
+    const foundCountEl = document.getElementById('found-count');
+    const timerDisplayEl = document.getElementById('timer-display');
+    const clearModal = document.getElementById('clear-modal');
+    const finalTimeEl = document.getElementById('final-time');
 
-<div class="puzzle" id="puzzle">
-  <img src="あ.webp" alt="間違い探しの問題">
-
-  <!-- 正解位置：画像全体に対する割合 -->
-  <button class="target" data-id="1"
-    style="left:53.7%;top:48%;"
-    aria-label="間違い1"></button>
-
-  <button class="target" data-id="2"
-    style="left:75.2%;top:37.7%;"
-    aria-label="間違い2"></button>
-
-  <button class="target" data-id="3"
-    style="left:69.4%;top:70.8%;"
-    aria-label="間違い3"></button>
-
-  <button class="target" data-id="4"
-    style="left:55%;top:85%;"
-    aria-label="間違い4"></button>
-
-  <button class="target" data-id="5"
-    style="left:91.4%;top:42%;"
-    aria-label="間違い5"></button>
-
-  <button class="target" data-id="6"
-    style="left:77.6%;top:51.9%;"
-    aria-label="間違い6"></button>
-
-  <button class="target" data-id="7"
-    style="left:61.3%;top:35.2%;"
-    aria-label="間違い7"></button>
-
-  <button class="target" data-id="8"
-    style="left:88.7%;top:16.7%;"
-    aria-label="間違い8"></button>
-</div>
-
-<p id="message">スタートを押して始めてください。</p>
-
-</main>
-
-<script>
-const timer = document.getElementById("timer");
-const count = document.getElementById("count");
-const message = document.getElementById("message");
-const startButton = document.getElementById("start");
-const resetButton = document.getElementById("reset");
-const targets = document.querySelectorAll(".target");
-
-let started = false;
-let finished = false;
-let found = 0;
-let startTime = 0;
-let elapsed = 0;
-let animationId = null;
-
-function formatTime(ms) {
-  const tenths = Math.floor(ms / 100);
-  const minutes = Math.floor(tenths / 600);
-  const seconds = Math.floor(tenths / 10) % 60;
-  const decimal = tenths % 10;
-
-  return (
-    String(minutes).padStart(2, "0") + ":" +
-    String(seconds).padStart(2, "0") + "." +
-    decimal
-  );
-}
-
-function updateTimer() {
-  if (!started || finished) return;
-
-  elapsed = performance.now() - startTime;
-  timer.textContent = formatTime(elapsed);
-
-  animationId = requestAnimationFrame(updateTimer);
-}
-
-function startTimer() {
-  if (started || finished) return;
-
-  started = true;
-  startTime = performance.now() - elapsed;
-
-  startButton.disabled = true;
-  message.textContent = "間違いを探してください！";
-
-  updateTimer();
-}
-
-startButton.addEventListener("click", startTimer);
-
-targets.forEach((target) => {
-  target.addEventListener("click", () => {
-    if (finished || target.classList.contains("found")) {
-      return;
+    // タイマー開始
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(updateTimer, 100);
     }
 
-    // 最初のクリックでタイマーを開始
-    if (!started) {
-      startTimer();
+    // タイマー更新
+    function updateTimer() {
+      if (!startTime) return;
+      const elapsedMs = Date.now() - startTime;
+      timerDisplayEl.textContent = formatTime(elapsedMs);
     }
 
-    target.classList.add("found");
-    target.disabled = true;
-    found++;
+    // ミリ秒を mm:ss.d 形式にフォーマット
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const tenths = Math.floor((ms % 1000) / 100);
 
-    count.textContent =
-      "見つけた間違い：" + found + " / 8";
-
-    if (found === 8) {
-      finished = true;
-      elapsed = performance.now() - startTime;
-
-      cancelAnimationFrame(animationId);
-
-      timer.textContent = formatTime(elapsed);
-      message.textContent =
-        "クリア！ タイム：" + formatTime(elapsed);
-
-      startButton.disabled = true;
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+      return `${mStr}:${sStr}.${tenths}`;
     }
-  });
-});
 
-resetButton.addEventListener("click", () => {
-  cancelAnimationFrame(animationId);
+    // タップ・クリックイベント判定
+    gameContainer.addEventListener('click', (e) => {
+      if (isFinished) return;
 
-  started = false;
-  finished = false;
-  found = 0;
-  elapsed = 0;
-  startTime = 0;
+      if (!startTime) {
+        startTimer();
+      }
 
-  timer.textContent = "00:00.0";
-  count.textContent = "見つけた間違い：0 / 8";
-  message.textContent = "スタートを押して始めてください。";
+      const rect = gameContainer.getBoundingClientRect();
+      const clickXPercent = ((e.clientX - rect.left) / rect.width) * 100;
+      const clickYPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
-  startButton.disabled = false;
+      // クリック位置が間違い箇所に含まれるかチェック
+      for (const diff of DIFFERENCES) {
+        if (foundIds.has(diff.id)) continue;
 
-  targets.forEach((target) => {
-    target.classList.remove("found");
-    target.disabled = false;
-  });
-});
-</script>
+        // 判定エリア（円形）の距離計算
+        const dx = clickXPercent - diff.x;
+        const dy = clickYPercent - diff.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
+        if (distance <= diff.radius) {
+          // 正解処理
+          foundIds.add(diff.id);
+          addMarker(diff.x, diff.y, diff.radius);
+          updateScore();
+          break;
+        }
+      }
+    });
+
+    // 正解の赤い丸を描画
+    function addMarker(xPercent, yPercent, radiusPercent) {
+      const marker = document.createElement('div');
+      marker.className = 'marker';
+      
+      const width = gameContainer.clientWidth;
+      const sizePx = (radiusPercent * 2 / 100) * width;
+
+      marker.style.left = `${xPercent}%`;
+      marker.style.top = `${yPercent}%`;
+      marker.style.width = `${Math.max(sizePx, 24)}px`;
+      marker.style.height = `${Math.max(sizePx, 24)}px`;
+
+      gameContainer.appendChild(marker);
+    }
+
+    // スコア更新 & 8個達成でクリア
+    function updateScore() {
+      const count = foundIds.size;
+      foundCountEl.textContent = count;
+
+      if (count >= 8) {
+        finishGame();
+      }
+    }
+
+    // ゲーム終了処理
+    function finishGame() {
+      isFinished = true;
+      clearInterval(timerInterval);
+      const elapsedMs = Date.now() - startTime;
+      const formattedTime = formatTime(elapsedMs);
+
+      finalTimeEl.textContent = formattedTime;
+      setTimeout(() => {
+        clearModal.classList.add('active');
+      }, 300);
+    }
+
+    // ゲームリセット
+    function resetGame() {
+      foundIds.clear();
+      isFinished = false;
+      startTime = null;
+      clearInterval(timerInterval);
+
+      foundCountEl.textContent = '0';
+      timerDisplayEl.textContent = '00:00.0';
+      clearModal.classList.remove('active');
+
+      // 設置した赤丸マーカーを削除
+      const markers = document.querySelectorAll('.marker');
+      markers.forEach(m => m.remove());
+    }
+  </script>
 </body>
 </html>
