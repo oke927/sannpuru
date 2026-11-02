@@ -28,8 +28,8 @@
       align-items: center;
       background: #ffffff;
       padding: 12px 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       margin-bottom: 15px;
     }
 
@@ -40,28 +40,80 @@
 
     .status-panel {
       display: flex;
+      align-items: center;
       gap: 20px;
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
-
-    .timer-box {
-      color: #e74c3c;
     }
 
     .score-box {
+      font-size: 1.2rem;
+      font-weight: bold;
       color: #27ae60;
     }
 
-    /* ゲームエリア */
+    /* 🔥 爆烈・主張激しすぎタイマーエリア 🔥 */
+    .timer-box {
+      background: #0d0d0d;
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 4px solid #ff0055;
+      box-shadow: 0 0 20px rgba(255, 0, 85, 0.8), inset 0 0 10px rgba(255, 0, 85, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: super-neon-pulse 1.0s infinite alternate;
+      transform: scale(1.05);
+    }
+
+    .timer-label {
+      font-size: 1.1rem;
+      color: #fff;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: #ff0055;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-shadow: 0 0 5px #000;
+    }
+
+    #timer-display {
+      font-size: 3.2rem;
+      font-weight: 900;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      letter-spacing: 2px;
+      color: #ff3300;
+      background: -webkit-linear-gradient(#fff, #ff3300);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px rgba(255, 51, 0, 0.9));
+      line-height: 1;
+    }
+
+    /* タイマーの超強烈ネオン脈動アニメーション */
+    @keyframes super-neon-pulse {
+      0% {
+        box-shadow: 0 0 15px rgba(255, 0, 85, 0.6), inset 0 0 8px rgba(255, 0, 85, 0.4);
+        border-color: #ff0055;
+        transform: scale(1.03);
+      }
+      100% {
+        box-shadow: 0 0 35px rgba(255, 51, 0, 1), inset 0 0 18px rgba(255, 51, 0, 0.8);
+        border-color: #ff5500;
+        transform: scale(1.08);
+      }
+    }
+
     .game-container {
       position: relative;
       width: 100%;
       max-width: 900px;
-      background: #000;
+      min-height: 400px;
+      background: #1a1a1a;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .game-image {
@@ -72,7 +124,6 @@
       -webkit-user-drag: none;
     }
 
-    /* 正解マーカー (赤い円) */
     .marker {
       position: absolute;
       border: 3px solid #ff2a2a;
@@ -88,21 +139,20 @@
       100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
 
-    /* モーダル共通スタイル（スタート画面・クリア画面） */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
       display: flex;
       justify-content: center;
       align-items: center;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
-      z-index: 100;
+      z-index: 9999;
     }
 
     .modal-overlay.active {
@@ -117,7 +167,7 @@
       text-align: center;
       max-width: 420px;
       width: 90%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
 
     .modal-content h2 {
@@ -125,13 +175,8 @@
       margin-bottom: 12px;
     }
 
-    .start-modal h2 {
-      color: #2c3e50;
-    }
-
-    .clear-modal h2 {
-      color: #27ae60;
-    }
+    .start-modal h2 { color: #2c3e50; }
+    .clear-modal h2 { color: #27ae60; }
 
     .modal-content p {
       font-size: 1.1rem;
@@ -144,7 +189,7 @@
       background-color: #ff5722;
       color: white;
       border: none;
-      padding: 12px 30px;
+      padding: 14px 36px;
       font-size: 1.2rem;
       font-weight: bold;
       border-radius: 30px;
@@ -156,11 +201,6 @@
     .btn-action:hover {
       background-color: #e64a19;
       transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(255, 87, 34, 0.5);
-    }
-
-    .btn-action:active {
-      transform: translateY(0);
     }
   </style>
 </head>
@@ -170,7 +210,10 @@
     <h1>間違い探し（8箇所見つけよう！）</h1>
     <div class="status-panel">
       <div class="score-box">発見: <span id="found-count">0</span> / 8</div>
-      <div class="timer-box">タイム: <span id="timer-display">0.0秒</span></div>
+      <div class="timer-box">
+        <span class="timer-label">TIME</span>
+        <span id="timer-display">0.0秒</span>
+      </div>
     </div>
   </header>
 
@@ -183,7 +226,7 @@
     <div class="modal-content">
       <h2>🔍 間違い探しゲーム 🔍</h2>
       <p>右側の画像から間違いを<strong>8箇所</strong>見つけよう！<br>スタートボタンを押すとタイマーが動きます。</p>
-      <button class="btn-action" onclick="startGame()">ゲームスタート</button>
+      <button class="btn-action" id="btn-start" onclick="startGame()">ゲームスタート</button>
     </div>
   </div>
 
@@ -191,23 +234,22 @@
   <div class="modal-overlay clear-modal" id="clear-modal">
     <div class="modal-content">
       <h2>🎉 GAME CLEAR! 🎉</h2>
-      <p>8箇所の間違いを発見しました！<br>クリアタイム: <strong id="final-time" style="color: #e74c3c; font-size: 1.3rem;">0.0秒</strong></p>
-      <button class="btn-action" style="background-color: #3498db; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);" onclick="resetGame()">もう一度挑戦する</button>
+      <p>8箇所の間違いを発見しました！<br>クリアタイム: <strong id="final-time" style="color: #ff3300; font-size: 2rem; font-weight: bold; text-shadow: 0 0 10px rgba(255,51,0,0.5);">0.0秒</strong></p>
+      <button class="btn-action" style="background-color: #3498db;" onclick="resetGame()">もう一度挑戦する</button>
     </div>
   </div>
 
   <script>
-    // 画像上の間違い箇所10個の定義（％指定：[X%, Y%, 判定半径%]）
     const DIFFERENCES = [
       { id: 1,  x: 55.0, y: 8.5,  radius: 3.5 }, // 1. KidsMenuの「d」の文字
       { id: 2,  x: 59.5, y: 26.5, radius: 3.5 }, // 2. ドリンクバーのオレンジジュース
-      { id: 3,  x: 71.0, y: 28.0, radius: 3.0 }, // 3. ドレッシングボトル（振りかけ）
+      { id: 3,  x: 68.0, y: 28.0, radius: 3.5 }, // 3. ドリア付近の振りかけボトル
       { id: 4,  x: 88.5, y: 29.5, radius: 3.0 }, // 4. 背景のカップサーバー／持ち手
       { id: 5,  x: 96.0, y: 53.0, radius: 4.5 }, // 5. ひつじのキャラクター（消えている）
       { id: 6,  x: 65.5, y: 60.5, radius: 3.5 }, // 6. オリーブオイルのボトルキャップ
       { id: 7,  x: 91.8, y: 62.5, radius: 3.0 }, // 7. 女の子のリボンの色
       { id: 8,  x: 56.5, y: 68.5, radius: 3.5 }, // 8. シュノーケル帽子の男の子の目
-      { id: 9,  x: 60.8, y: 82.5, radius: 3.5 }, // 9. 看板（Make Your Favorite）の欠け
+      { id: 9,  x: 57.5, y: 82.5, radius: 4.0 }, // 9. 左下の旗（Make Your Favorite）の欠け
       { id: 10, x: 82.5, y: 84.5, radius: 4.0 }  // 10. 唐辛子ボトルのラベル／色
     ];
 
@@ -223,7 +265,6 @@
     const clearModal = document.getElementById('clear-modal');
     const finalTimeEl = document.getElementById('final-time');
 
-    // ゲーム開始ボタンが押されたとき
     function startGame() {
       startModal.classList.remove('active');
       isPlaying = true;
@@ -247,7 +288,6 @@
     }
 
     gameContainer.addEventListener('click', (e) => {
-      // ゲームプレイ中でない場合はクリックを無効化
       if (!isPlaying) return;
 
       const rect = gameContainer.getBoundingClientRect();
@@ -306,7 +346,6 @@
       }, 300);
     }
 
-    // ゲームリセット（スタート画面に戻る）
     function resetGame() {
       foundIds.clear();
       isPlaying = false;
@@ -317,11 +356,9 @@
       timerDisplayEl.textContent = '0.0秒';
       clearModal.classList.remove('active');
 
-      // 赤丸マーカーの削除
       const markers = document.querySelectorAll('.marker');
       markers.forEach(m => m.remove());
 
-      // スタート画面を表示
       startModal.classList.add('active');
     }
   </script>
